@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -54,7 +55,7 @@ func TestCLIEndToEnd(t *testing.T) {
 		t.Fatal(out)
 	}
 	st, _ := os.Stat(e.key)
-	if st.Mode().Perm() != 0o600 {
+	if runtime.GOOS != "windows" && st.Mode().Perm() != 0o600 {
 		t.Fatal("key mode")
 	}
 	if code, _, _ := e.run("", "init", "--key", e.key); code != 2 {

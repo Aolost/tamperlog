@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -101,7 +102,7 @@ func TestKeyPermissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	st, _ := os.Stat(p)
-	if st.Mode().Perm() != 0o600 {
+	if runtime.GOOS != "windows" && st.Mode().Perm() != 0o600 {
 		t.Fatalf("mode %o", st.Mode().Perm())
 	}
 	if _, err := GenerateKey(p); err == nil {
@@ -115,7 +116,8 @@ func TestKeyPermissions(t *testing.T) {
 		t.Fatal("pub mismatch")
 	}
 	raw, _ := os.ReadFile(p)
-	for _, mode := range []os.FileMode{0o640, 0o644, 0o604, 0o660, 0o601} {
+	// Unix mode bits mean nothing on Windows; keyperm_windows_test.go covers the ACL check.
+	for _, mode := range unixModes([]os.FileMode{0o640, 0o644, 0o604, 0o660, 0o601}) {
 		os.Chmod(p, mode)
 		_, err := LoadPrivateKey(p)
 		if !errors.Is(err, ErrKeyPermissions) {
@@ -129,6 +131,7 @@ func TestKeyPermissions(t *testing.T) {
 	if _, err := LoadPrivateKey(p); err != nil {
 		t.Fatalf("0400 rejected: %v", err)
 	}
+	os.Chmod(p, 0o600) // let t.TempDir clean up on Windows (read-only files cannot be removed)
 	if _, err := LoadPrivateKey(dir); !errors.Is(err, ErrKeyNotRegular) {
 		t.Fatalf("dir: %v", err)
 	}
@@ -185,4 +188,12 @@ func FuzzDecodeCheckpoint(f *testing.F) {
 			t.Fatal("non-canonical")
 		}
 	})
+}
+
+// unixModes returns modes on Unix and nothing on Windows.
+func unixModes(modes []os.FileMode) []os.FileMode {
+	if runtime.GOOS == "windows" {
+		return nil
+	}
+	return modes
 }

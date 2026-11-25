@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 )
@@ -68,8 +67,8 @@ func LoadPrivateKey(path string) (ed25519.PrivateKey, error) {
 	if !st.Mode().IsRegular() {
 		return nil, ErrKeyNotRegular
 	}
-	if st.Mode().Perm()&0o077 != 0 {
-		return nil, fmt.Errorf("%w: %s has mode %04o", ErrKeyPermissions, path, st.Mode().Perm())
+	if err := checkKeyPermissions(f, st, path); err != nil {
+		return nil, err
 	}
 	data, err := io.ReadAll(io.LimitReader(f, maxKeyFile))
 	if err != nil {

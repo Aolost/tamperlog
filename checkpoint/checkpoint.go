@@ -141,12 +141,6 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 	return SyncDir(filepath.Dir(path))
 }
 
-// SyncDir fsyncs a directory so that renames and creations in it are durable.
-func SyncDir(dir string) error {
-	d, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	return d.Sync()
-}
+// SyncDir makes renames and creations in dir durable. The implementation is
+// platform specific: see syncdir_unix.go and syncdir_windows.go.
+func SyncDir(dir string) error { return syncDir(dir) }
