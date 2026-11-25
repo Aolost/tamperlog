@@ -252,3 +252,7 @@ consistency from m = n/2 + 7)
 
 Proofs grow with log2(n): 32 bytes per tree level. Building the in-memory tree
 costs about 64 bytes per entry (leaf hashes plus complete-subtree hashes).
+
+## Licence
+
+[MIT](LICENSE) © 2026 Skepta.
