@@ -210,7 +210,7 @@ func TestCLIUsageErrors(t *testing.T) {
 		}
 	}
 	// Loose key permissions are refused, and the key is never echoed.
-	os.Chmod(e.key, 0o644)
+	loosenKey(t, e.key)
 	code, out, errs := e.run("", "append", "x")
 	if code != 2 || !strings.Contains(errs, "permissions") || strings.Contains(out+errs, "PRIVATE KEY") {
 		t.Fatalf("%d %s %s", code, out, errs)
@@ -218,7 +218,7 @@ func TestCLIUsageErrors(t *testing.T) {
 	if code, _, _ := e.run("", "init", "--key", e.key); code != 2 {
 		t.Fatal("init with loose existing key")
 	}
-	os.Chmod(e.key, 0o600)
+	tightenKey(t, e.key)
 	// Re-init into a new dir with the existing key.
 	e2 := &env{t: t, dir: filepath.Join(e.tmp, "log2"), key: e.key, tmp: e.tmp}
 	if out := e2.must("init", "--key", e.key); !strings.Contains(out, "using existing key") {
